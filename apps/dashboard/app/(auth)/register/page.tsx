@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,7 @@ import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-import { useSearchParams } from 'next/navigation';
-
-// component ke andar, useState ke baad:
-
-
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const [step, setStep] = useState<'register' | 'verify'>('register');
   const [loading, setLoading] = useState(false);
@@ -41,6 +36,7 @@ export default function RegisterPage() {
   });
 
   const searchParams = useSearchParams();
+
   useEffect(() => {
     const verifyParam = searchParams.get('verify');
     if (verifyParam) {
@@ -50,7 +46,6 @@ export default function RegisterPage() {
     }
   }, []);
 
-  // ── Register ────────────────────────────────────
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
@@ -61,7 +56,6 @@ export default function RegisterPage() {
       toast.error('Password must be at least 8 characters');
       return;
     }
-
     setLoading(true);
     try {
       await axios.post(`${API}/auth/register`, {
@@ -69,7 +63,6 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
       });
-
       setVerifyEmail(form.email);
       setStep('verify');
       toast.success('📧 OTP sent! Check your inbox.');
@@ -82,7 +75,6 @@ export default function RegisterPage() {
     }
   };
 
-  // ── OTP Input ───────────────────────────────────
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const newOtp = [...otp];
@@ -107,7 +99,6 @@ export default function RegisterPage() {
     inputRefs.current[lastIdx]?.focus();
   };
 
-  // ── Verify OTP ──────────────────────────────────
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpStr = otp.join('');
@@ -115,18 +106,15 @@ export default function RegisterPage() {
       toast.error('Enter complete 6-digit OTP');
       return;
     }
-
     setLoading(true);
     try {
       const res = await axios.post(`${API}/auth/verify-otp`, {
         email: verifyEmail,
         otp: otpStr,
       });
-
       const { accessToken, refreshToken } = res.data;
       Cookies.set('accessToken', accessToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 7 });
-
       toast.success('✅ Email verified! Welcome to Fluxypy Bot!');
       router.push('/dashboard');
     } catch (err: any) {
@@ -138,7 +126,6 @@ export default function RegisterPage() {
     }
   };
 
-  // ── Resend Timer ────────────────────────────────
   const startResendTimer = () => {
     setResendTimer(60);
     const interval = setInterval(() => {
@@ -164,7 +151,6 @@ export default function RegisterPage() {
     }
   };
 
-  // ── REGISTER FORM ────────────────────────────────
   if (step === 'register') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center p-4">
@@ -180,60 +166,27 @@ export default function RegisterPage() {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label>Company / Organization Name</Label>
-                <Input
-                  placeholder="ABC Company"
-                  value={form.orgName}
-                  onChange={(e) => setForm({ ...form, orgName: e.target.value })}
-                  required
-                />
+                <Input placeholder="ABC Company" value={form.orgName} onChange={(e) => setForm({ ...form, orgName: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Email Address</Label>
-                <Input
-                  type="email"
-                  placeholder="you@company.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                />
+                <Input type="email" placeholder="you@company.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Password</Label>
-                <Input
-                  type="password"
-                  placeholder="Min 8 characters"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                />
+                <Input type="password" placeholder="Min 8 characters" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Confirm Password</Label>
-                <Input
-                  type="password"
-                  placeholder="Repeat password"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  required
-                />
+                <Input type="password" placeholder="Repeat password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required />
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={loading}
-              >
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>
-                ) : (
-                  <><ArrowRight className="w-4 h-4 mr-2" />Create Account</>
-                )}
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : <><ArrowRight className="w-4 h-4 mr-2" />Create Account</>}
               </Button>
             </form>
             <p className="text-center text-sm text-slate-500 mt-4">
               Already have an account?{' '}
-              <Link href="/login" className="text-indigo-600 hover:underline font-medium">
-                Sign in
-              </Link>
+              <Link href="/login" className="text-indigo-600 hover:underline font-medium">Sign in</Link>
             </p>
           </CardContent>
         </Card>
@@ -241,7 +194,6 @@ export default function RegisterPage() {
     );
   }
 
-  // ── OTP VERIFY FORM ──────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-0">
@@ -255,20 +207,15 @@ export default function RegisterPage() {
             <strong className="text-slate-700">{verifyEmail}</strong>
           </CardDescription>
         </CardHeader>
-
         <CardContent>
           <form onSubmit={handleVerify} className="space-y-6">
-            {/* OTP Boxes */}
             <div>
-              <Label className="text-center block mb-3 text-slate-600">
-                Enter OTP
-              </Label>
+              <Label className="text-center block mb-3 text-slate-600">Enter OTP</Label>
               <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
                 {otp.map((digit, i) => (
                   <input
                     key={i}
                     ref={(el) => { inputRefs.current[i] = el; }}
-                    id={`otp-${i}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -276,63 +223,44 @@ export default function RegisterPage() {
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all
-                      ${digit
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-slate-200 bg-white text-slate-800'
-                      }
+                      ${digit ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-800'}
                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100`}
                   />
                 ))}
               </div>
-              <p className="text-center text-xs text-slate-400 mt-2">
-                💡 You can paste the OTP directly
-              </p>
+              <p className="text-center text-xs text-slate-400 mt-2">💡 You can paste the OTP directly</p>
             </div>
-
-            {/* Timer */}
             <div className="text-center">
               {resendTimer > 0 ? (
-                <p className="text-sm text-slate-400">
-                  Resend OTP in <span className="font-bold text-indigo-600">{resendTimer}s</span>
-                </p>
+                <p className="text-sm text-slate-400">Resend OTP in <span className="font-bold text-indigo-600">{resendTimer}s</span></p>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={resendLoading}
-                  className="text-sm text-indigo-600 hover:underline flex items-center gap-1 mx-auto"
-                >
-                  {resendLoading ? (
-                    <><Loader2 className="w-3 h-3 animate-spin" />Sending...</>
-                  ) : (
-                    <><RefreshCw className="w-3 h-3" />Resend OTP</>
-                  )}
+                <button type="button" onClick={handleResend} disabled={resendLoading} className="text-sm text-indigo-600 hover:underline flex items-center gap-1 mx-auto">
+                  {resendLoading ? <><Loader2 className="w-3 h-3 animate-spin" />Sending...</> : <><RefreshCw className="w-3 h-3" />Resend OTP</>}
                 </button>
               )}
             </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700"
-              disabled={loading || otp.join('').length !== 6}
-            >
-              {loading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</>
-              ) : (
-                <><ArrowRight className="w-4 h-4 mr-2" />Verify & Continue</>
-              )}
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading || otp.join('').length !== 6}>
+              {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : <><ArrowRight className="w-4 h-4 mr-2" />Verify & Continue</>}
             </Button>
-
-            <button
-              type="button"
-              onClick={() => setStep('register')}
-              className="w-full text-sm text-slate-400 hover:text-slate-600"
-            >
+            <button type="button" onClick={() => setStep('register')} className="w-full text-sm text-slate-400 hover:text-slate-600">
               ← Back to Register
             </button>
           </form>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ✅ Suspense wrap — useSearchParams ke liye zaruri
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <RegisterPageContent />
+    </Suspense>
   );
 }
