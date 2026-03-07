@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluxypy Bot Widget Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .hero {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      text-align: center;
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      font-size: 20px;
+      opacity: 0.85;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 60px;
+    }
+
+    .feature {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: left;
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .feature h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: white;
+    }
+
+    .feature p {
+      font-size: 14px;
+      opacity: 0.75;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 14px;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .dot { 
+      width: 8px; 
+      height: 8px; 
+      background: #4ADE80; 
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 36px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="badge">
+      <span class="dot"></span>
+      Fluxypy Bot — Live Demo
+    </div>
+
+    <h1>AI Chatbot for<br/>Your Website</h1>
+
+    <p>
+      Upload your knowledge base and get an AI chatbot<br/>
+      that answers questions from your content instantly.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">📄</div>
+        <h3>Upload Any Document</h3>
+        <p>PDF, Word, or plain text — your bot learns from your content instantly.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <h3>AI-Powered Answers</h3>
+        <p>Powered by Google Gemini — fast, accurate, and always on-brand.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <h3>One Line of Code</h3>
+        <p>Add to any website with a single script tag. No coding required.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 
+    🤖 FLUXYPY BOT WIDGET
+    Replace YOUR_API_KEY_HERE with your actual fpy_pub_xxx key
+  -->
+  <script 
+    src="./chatbot.js" 
+    data-api-key="fpy_pub_5ce310e0bcae064e0979c9a230346e1d">
+  </script>
+
+</body>
+</html>

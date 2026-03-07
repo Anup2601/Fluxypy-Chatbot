@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// SUBSCRIPTION PLANS
+// ─────────────────────────────────────────
+model SubscriptionPlan {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  priceMonthly  Decimal  @map("price_monthly") @db.Decimal(10,2)
+  priceYearly   Decimal  @map("price_yearly")  @db.Decimal(10,2)
+  limits        Json
+  stripePriceId String?  @map("stripe_price_id")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  organizations Organization[]
+
+  @@map("subscription_plans")
+}
+
+model Organization {
+  id     String    @id @default(uuid())
+  name   String
+  slug   String    @unique
+  apiKey String    @unique
+  status OrgStatus @default(ACTIVE)
+
+  settings Json @default("{}")
+
+  planId String?
+  plan   SubscriptionPlan? @relation(fields: [planId], references: [id])
+
+  // Billing
+  razorpayCustomerId     String?
+  razorpaySubscriptionId String?
+  subscriptionStatus     String    @default("none")
+  trialStartDate         DateTime?
+  trialEndDate           DateTime?
+  trialGrantedBy         String?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  paymentType            String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  users            User[]
+  knowledgeSources KnowledgeSource[]
+  conversations    Conversation[]
+  usageRecords     UsageRecord[]
+  analyticsDaily   AnalyticsDaily[]
+  trialRequests    TrialRequest[]
+
+  @@map("organizations")
+}
+
+enum OrgStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+// ─────────────────────────────────────────
+// USERS (dashboard admin users)
+// ─────────────────────────────────────────
+model User {
+  id           String       @id @default(uuid())
+  orgId        String       @map("org_id")
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  role         UserRole     @default(ADMIN)
+  isVerified   Boolean      @default(false) @map("is_verified")
+  refreshToken String?      @map("refresh_token")
+  lastLogin    DateTime?    @map("last_login")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt      @map("updated_at")
+  otpCode      String?
+  otpExpiresAt DateTime?
+  otpAttempts  Int           @default(0)
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ─────────────────────────────────────────
+// KNOWLEDGE SOURCES
+// ─────────────────────────────────────────
+model KnowledgeSource {
+  id         String       @id @default(uuid())
+  orgId      String       @map("org_id")
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name       String
+  type       SourceType
+  status     SourceStatus @default(PENDING)
+  filePath   String?      @map("file_path")
+  sourceUrl  String?      @map("source_url")
+  chunkCount Int          @default(0) @map("chunk_count")
+  tokenCount Int          @default(0) @map("token_count")
+  metadata   Json         @default("{}")
+  errorMsg   String?      @map("error_msg")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt      @map("updated_at")
+
+  @@index([orgId])
+  @@map("knowledge_sources")
+}
+
+enum SourceType {
+  PDF
+  DOCX
+  URL
+  TEXT
+  FAQ
+}
+
+enum SourceStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+// ─────────────────────────────────────────
+// CONVERSATIONS
+// ─────────────────────────────────────────
+model Conversation {
+  id        String       @id @default(uuid())
+  orgId     String       @map("org_id")
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sessionId String       @map("session_id")
+  visitorIp String?      @map("visitor_ip")
+  metadata  Json         @default("{}")
+  startedAt DateTime     @default(now()) @map("started_at")
+  endedAt   DateTime?    @map("ended_at")
+
+  messages  Message[]
+
+  @@index([orgId])
+  @@index([sessionId])
+  @@map("conversations")
+}
+
+// ─────────────────────────────────────────
+// MESSAGES
+// ─────────────────────────────────────────
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  orgId          String       @map("org_id")
+  role           MessageRole
+  content        String       @db.Text
+  tokensUsed     Int          @default(0) @map("tokens_used")
+  sources        Json         @default("[]")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([orgId])
+  @@index([conversationId])
+  @@map("messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+// ─────────────────────────────────────────
+// USAGE METERING
+// ─────────────────────────────────────────
+model UsageRecord {
+  id    String   @id @default(uuid())
+  orgId String
+  date  DateTime
+
+  apiCallsToday      Int @default(0)
+  visitorsToday      Int @default(0)
+  conversationsToday Int @default(0)
+
+  apiCallsMonth      Int @default(0)
+  visitorsMonth      Int @default(0)
+  conversationsMonth Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, date])
+  @@map("usage_records")
+}
+
+// ─────────────────────────────────────────
+// ANALYTICS (pre-aggregated per day)
+// ─────────────────────────────────────────
+model AnalyticsDaily {
+  id               String       @id @default(uuid())
+  orgId            String       @map("org_id")
+  org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  date             DateTime     @db.Date
+  conversations    Int          @default(0)
+  messages         Int          @default(0)
+  uniqueUsers      Int          @default(0) @map("unique_users")
+  leadsCaptured    Int          @default(0) @map("leads_captured")
+  avgResponseTime  Float?       @map("avg_response_time")
+  popularQuestions Json         @default("[]") @map("popular_questions")
+
+  @@unique([orgId, date])
+  @@index([orgId])
+  @@map("analytics_daily")
+}
+
+// Trial requests table
+model TrialRequest {
+  id        String   @id @default(uuid())
+  orgId     String
+  
+  // Security tracking
+  ipAddress      String
+  emailDomain    String
+  cardFingerprint String?  // Razorpay card fingerprint
+  razorpayPaymentId String? // ₹0 payment ID
+  
+  // Status
+  status    String   @default("pending") // pending, approved, rejected
+  
+  // Admin action
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  rejectReason String?
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("trial_requests")
+}
