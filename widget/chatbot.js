@@ -7,9 +7,9 @@
     document.querySelector('script[data-api-key]');
 
   const API_KEY = scriptTag?.getAttribute('data-api-key');
-  const API_BASE =
-    scriptTag?.getAttribute('data-api-url') ||
-    (scriptSrc ? new URL(scriptSrc).origin + '/api/v1' : 'https://fluxypy-chat-api.onrender.com/api/v1');
+  const scriptSrc = scriptTag?.src || '';
+  const API_BASE = scriptTag?.getAttribute('data-api-url') ||
+  (scriptSrc ? new URL(scriptSrc).origin + '/api/v1' : 'https://fluxypy-chat-api.onrender.com/api/v1');
 
   const WIDGET_VERSION = '1.0.0';
 
