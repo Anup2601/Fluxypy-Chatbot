@@ -57,11 +57,3 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_51178F1C546D41E5B5CC637A07D7D4DC }}
 
 
-
-
-
-
-apps/api $ npm install -g pnpm && pnpm install && npx prisma generate && pnpm run build
-
-
-ye karni hai 
