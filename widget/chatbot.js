@@ -9,7 +9,7 @@
   const API_KEY = scriptTag?.getAttribute('data-api-key');
   const API_BASE =
     scriptTag?.getAttribute('data-api-url') ||
-    'hhttps://fluxypy-chat-api.onrender.com';
+    'https://fluxypy-chat-api.onrender.com';
 
   const WIDGET_VERSION = '1.0.0';
 
